@@ -2,8 +2,11 @@ import { Button } from "@/components/ui/button";
 
 export default function Home() {
   return (
-    <h1>
-      <Button variant="primary" size="xl">Destructive</Button>
-    </h1>
+    <div className="min-h-screen bg-stone-50 text-stone-900">
+       <section className="pt-32 pb-20 px-4">
+        <Button variant="primary"> hello </Button>
+       </section>
+    </div>
   );
 }
+ 
