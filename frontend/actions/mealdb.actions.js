@@ -103,6 +103,7 @@ export async function getMealsByArea(area) {
         }
 
         const data = await res.json();
+        console.log("data from acation", data)
 
         return {
             success: true,
