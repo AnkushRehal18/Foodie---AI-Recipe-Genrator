@@ -55,7 +55,7 @@ const Header = async () => {
                             >
                                 <Sparkles
                                     className={`h-3 w-3 ${user.subscriptionTier === "pro"
-                                            ? "text-white fiimport { PricingTable } from '@clerk/nextjs'll-white/20"
+                                            ? "text-white fill-white/20"
                                             : "text-stone-500"
                                         }`} />
                                 <span>
