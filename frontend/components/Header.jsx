@@ -18,7 +18,7 @@ const Header = async () => {
         <header className="fixed top-0 w-full  border-b border-stone-200 bg-stone-50/80 backdrop-blur-md z-50 supports-backdrop-filter:bg-stone-50/60">
             <nav className='container mx-auto px-4 h-16 flex items-center justify-between'>
                 <Link href={user ? "/dashboard" : "/"}>
-                    <Image src="/orange-logo.png"
+                    <Image src="/orange-logo-v2.png"
                         alt='foodie logo'
                         width={60}
                         height={60}
