@@ -14,6 +14,15 @@ import {
 
 export default function RecipeCard({ recipe, variant = "default" }) {
   // Handle different recipe data structures
+  // Helper to extract plain text from Strapi blocks or return string as-is
+  const extractDescription = (desc) => {
+    if (!desc) return "";
+    if (Array.isArray(desc)) {
+      return desc.map(block => block.children?.map(c => c.text).join("")).join(" ");
+    }
+    return desc;
+  };
+
   const getRecipeData = () => {
     // For MealDB recipes (category/cuisine pages)
     if (recipe.strMeal) {
@@ -29,7 +38,7 @@ export default function RecipeCard({ recipe, variant = "default" }) {
     if (recipe.matchPercentage) {
       return {
         title: recipe.title,
-        description: recipe.description,
+        description: extractDescription(recipe.description),
         category: recipe.category,
         cuisine: recipe.cuisine,
         prepTime: recipe.prepTime,
@@ -37,9 +46,9 @@ export default function RecipeCard({ recipe, variant = "default" }) {
         servings: recipe.servings,
         matchPercentage: recipe.matchPercentage,
         missingIngredients: recipe.missingIngredients || [],
-        image: recipe.imageUrl, // Add image support
+        image: recipe.imageUrl,
         href: `/recipe?cook=${encodeURIComponent(recipe.title)}`,
-        showImage: !!recipe.imageUrl, // Show if image exists
+        showImage: !!recipe.imageUrl,
       };
     }
 
@@ -47,7 +56,7 @@ export default function RecipeCard({ recipe, variant = "default" }) {
     if (recipe) {
       return {
         title: recipe.title,
-        description: recipe.description,
+        description: extractDescription(recipe.description),
         category: recipe.category,
         cuisine: recipe.cuisine,
         prepTime: recipe.prepTime,
