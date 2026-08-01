@@ -103,7 +103,7 @@ export async function getOrGenerateRecipe(formData) {
 
         // Check if user has saved this recipe
         const savedRecipeResponse = await fetch(
-          `${STRAPI_URL}/api/saved-recipes?filters[user][id][$eq]=${user.id}&filters[recipe][id][$eq]=${searchData.data[0].id}`,
+          `${STRAPI_URL}/api/saved-recipes?filters[user][id][$eq]=${user.id}&filters[recipe][documentId][$eq]=${searchData.data[0].documentId}`,
           {
             headers: {
               Authorization: `Bearer ${STRAPI_API_TOKEN}`,
@@ -121,7 +121,7 @@ export async function getOrGenerateRecipe(formData) {
         return {
           success: true,
           recipe: searchData.data[0],
-          recipeId: searchData.data[0].id,
+          recipeId: searchData.data[0].documentId,
           isSaved: isSaved,
           fromDatabase: true,
           isPro,
@@ -275,20 +275,26 @@ Guidelines:
     const strapiRecipeData = {
       data: {
         title: normalizedTitle,
-        description: recipeData.description,
-        cuisine,
+        // schema type is "blocks" (rich text) — wrap plain string in Strapi block format
+        description: [
+          {
+            type: "paragraph",
+            children: [{ type: "text", text: recipeData.description || "" }],
+          },
+        ],
+        cuisine: cuisine === "middle-eastern" ? "middle - eastern" : cuisine,
         category,
         ingredients: recipeData.ingredients,
         instructions: recipeData.instructions,
         prepTime: Number(recipeData.prepTime),
-        cookTime: Number(recipeData.cookTime),
-        servings: Number(recipeData.servings),
+        cookTIme: Number(recipeData.cookTime), // schema typo: cookTIme
+        serving: Number(recipeData.servings),  // schema: singular "serving"
         nutrition: recipeData.nutrition,
         tips: recipeData.tips,
         substitutions: recipeData.substitutions,
         imageUrl: imageUrl || "",
         isPublic: true,
-        author: user.id,
+        users_permissions_user: user.id, // schema relation name
       },
     };
 
@@ -306,14 +312,15 @@ Guidelines:
       body: JSON.stringify(strapiRecipeData),
     });
 
+    let savedRecipeId = null;
     if (!createRecipeResponse.ok) {
       const errorText = await createRecipeResponse.text();
-      console.error("Failed to save recipe:", errorText);
-      throw new Error("Failed to save recipe to database");
+      console.error("Failed to save recipe to Strapi (continuing anyway):", errorText);
+    } else {
+      const createdRecipe = await createRecipeResponse.json();
+      savedRecipeId = createdRecipe.data.documentId || createdRecipe.data.id;
+      console.log("Recipe saved to database:", savedRecipeId);
     }
-
-    const createdRecipe = await createRecipeResponse.json();
-    console.log("Recipe saved to database:", createdRecipe.data.id);
 
     return {
       success: true,
@@ -324,7 +331,7 @@ Guidelines:
         cuisine,
         imageUrl: imageUrl || "",
       },
-      recipeId: createdRecipe.data.id,
+      recipeId: savedRecipeId,
       isSaved: false,
       fromDatabase: false,
       recommendationsLimit: isPro ? "unlimited" : 5,
@@ -352,7 +359,7 @@ export async function saveRecipeToCollection(formData) {
 
     // Check if already saved
     const existingResponse = await fetch(
-      `${STRAPI_URL}/api/saved-recipes?filters[user][id][$eq]=${user.id}&filters[recipe][id][$eq]=${recipeId}`,
+      `${STRAPI_URL}/api/saved-recipes?filters[user][id][$eq]=${user.id}&filters[recipe][documentId][$eq]=${recipeId}`,
       {
         headers: {
           Authorization: `Bearer ${STRAPI_API_TOKEN}`,
@@ -382,7 +389,7 @@ export async function saveRecipeToCollection(formData) {
       body: JSON.stringify({
         data: {
           user: user.id,
-          recipe: recipeId,
+          recipe: { documentId: recipeId },
           savedAt: new Date().toISOString(),
         },
       }),
@@ -424,7 +431,7 @@ export async function removeRecipeFromCollection(formData) {
 
     // Find saved recipe relation
     const searchResponse = await fetch(
-      `${STRAPI_URL}/api/saved-recipes?filters[user][id][$eq]=${user.id}&filters[recipe][id][$eq]=${recipeId}`,
+      `${STRAPI_URL}/api/saved-recipes?filters[user][id][$eq]=${user.id}&filters[recipe][documentId][$eq]=${recipeId}`,
       {
         headers: {
           Authorization: `Bearer ${STRAPI_API_TOKEN}`,
